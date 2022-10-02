@@ -453,6 +453,18 @@
             }
           }
         },
+        "flexibleengine": {
+          "release": "412.86.202209302317-0",
+          "formats": {
+            "qcow2.gz": {
+              "disk": {
+                "location": "https://rhcos.mirror.openshift.com/art/storage/releases/rhcos-4.12/412.86.202209302317-0/x86_64/rhcos-412.86.202209302317-0-openstack.x86_64.qcow2.gz",
+                "sha256": "3448c17541403df3ab9d66af0203735161bf21da5392ae195cfe447a3018804a",
+                "uncompressed-sha256": "d6ba8e14e6871eeed8c9cfaa865f79f26f94f5f6e93e35916fc5a25785981712"
+              }
+            }
+          }
+        },
         "gcp": {
           "release": "412.86.202209302317-0",
           "formats": {
@@ -765,6 +777,14 @@
             "us-west-2": {
               "release": "412.86.202209302317-0",
               "image": "ami-06c6018bd6055488d"
+            }
+          }
+        },
+        "flexibleengine": {
+          "regions": {
+            "eu-west-0": {
+              "release": "412.86.202209302317-0",
+              "image": "ami-425bcbf0-530e-45e5-913c-d253b467c369"
             }
           }
         },

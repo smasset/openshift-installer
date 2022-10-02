@@ -21,6 +21,8 @@ var (
 	AzureRM = provider("azurerm")
 	// AzureStack is the provider for creating resources in Azure Stack.
 	AzureStack = provider("azurestack")
+	// FE is the provider for creating resources in Flexible Engine.
+	FE = provider("flexibleengine")
 	// Google is the provider for creating resources in GCP.
 	Google = provider("google")
 	// IBM is the provider for creating resources in IBM Cloud.

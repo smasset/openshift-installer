@@ -41,6 +41,7 @@ import (
 	awstfvars "github.com/openshift/installer/pkg/tfvars/aws"
 	azuretfvars "github.com/openshift/installer/pkg/tfvars/azure"
 	baremetaltfvars "github.com/openshift/installer/pkg/tfvars/baremetal"
+	flexiblenginetfvars "github.com/openshift/installer/pkg/tfvars/flexibleengine"
 	gcptfvars "github.com/openshift/installer/pkg/tfvars/gcp"
 	ibmcloudtfvars "github.com/openshift/installer/pkg/tfvars/ibmcloud"
 	libvirttfvars "github.com/openshift/installer/pkg/tfvars/libvirt"
@@ -54,6 +55,7 @@ import (
 	"github.com/openshift/installer/pkg/types/aws"
 	"github.com/openshift/installer/pkg/types/azure"
 	"github.com/openshift/installer/pkg/types/baremetal"
+	"github.com/openshift/installer/pkg/types/flexibleengine"
 	"github.com/openshift/installer/pkg/types/gcp"
 	"github.com/openshift/installer/pkg/types/ibmcloud"
 	"github.com/openshift/installer/pkg/types/libvirt"
@@ -472,6 +474,24 @@ func (t *TerraformVariables) Generate(parents asset.Parents) error {
 			ironicCreds.Username,
 			ironicCreds.Password,
 			masterIgn,
+		)
+		if err != nil {
+			return errors.Wrapf(err, "failed to get %s Terraform variables", platform)
+		}
+		t.FileList = append(t.FileList, &asset.File{
+			Filename: TfPlatformVarsFileName,
+			Data:     data,
+		})
+
+	case flexibleengine.Name:
+		data, err := flexiblenginetfvars.TFVars(
+			flexiblenginetfvars.TFVarsSources{
+				AccessKey:   installConfig.Config.FE.AccessKey,
+				SecretKey:   installConfig.Config.FE.SecretKey,
+				DomainName:  installConfig.Config.FE.DomainName,
+				Region:      installConfig.Config.FE.Region,
+				ProjectName: installConfig.Config.FE.ProjectName,
+			},
 		)
 		if err != nil {
 			return errors.Wrapf(err, "failed to get %s Terraform variables", platform)

@@ -23,6 +23,7 @@ import (
 	awstypes "github.com/openshift/installer/pkg/types/aws"
 	azuretypes "github.com/openshift/installer/pkg/types/azure"
 	baremetaltypes "github.com/openshift/installer/pkg/types/baremetal"
+	flexibleenginetypes "github.com/openshift/installer/pkg/types/flexibleengine"
 	gcptypes "github.com/openshift/installer/pkg/types/gcp"
 	ibmcloudtypes "github.com/openshift/installer/pkg/types/ibmcloud"
 	libvirttypes "github.com/openshift/installer/pkg/types/libvirt"
@@ -211,7 +212,7 @@ func (d *DNS) Generate(dependencies asset.Parents) error {
 		config.Spec.PrivateZone = &configv1.DNSZone{
 			ID: zoneID,
 		}
-	case baremetaltypes.Name, libvirttypes.Name, nonetypes.Name, nutanixtypes.Name, openstacktypes.Name, ovirttypes.Name, vspheretypes.Name:
+	case baremetaltypes.Name, flexibleenginetypes.Name, libvirttypes.Name, nonetypes.Name, nutanixtypes.Name, openstacktypes.Name, ovirttypes.Name, vspheretypes.Name:
 	default:
 		return errors.New("invalid Platform")
 	}

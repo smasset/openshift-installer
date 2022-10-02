@@ -13,6 +13,7 @@ import (
 	awsconfig "github.com/openshift/installer/pkg/asset/installconfig/aws"
 	azureconfig "github.com/openshift/installer/pkg/asset/installconfig/azure"
 	baremetalconfig "github.com/openshift/installer/pkg/asset/installconfig/baremetal"
+	flexibleengineconfig "github.com/openshift/installer/pkg/asset/installconfig/flexibleengine"
 	gcpconfig "github.com/openshift/installer/pkg/asset/installconfig/gcp"
 	ibmcloudconfig "github.com/openshift/installer/pkg/asset/installconfig/ibmcloud"
 	libvirtconfig "github.com/openshift/installer/pkg/asset/installconfig/libvirt"
@@ -26,6 +27,7 @@ import (
 	"github.com/openshift/installer/pkg/types/aws"
 	"github.com/openshift/installer/pkg/types/azure"
 	"github.com/openshift/installer/pkg/types/baremetal"
+	"github.com/openshift/installer/pkg/types/flexibleengine"
 	"github.com/openshift/installer/pkg/types/gcp"
 	"github.com/openshift/installer/pkg/types/ibmcloud"
 	"github.com/openshift/installer/pkg/types/libvirt"
@@ -75,6 +77,11 @@ func (a *platform) Generate(asset.Parents) error {
 		}
 	case baremetal.Name:
 		a.BareMetal, err = baremetalconfig.Platform()
+		if err != nil {
+			return err
+		}
+	case flexibleengine.Name:
+		a.FE, err = flexibleengineconfig.Platform()
 		if err != nil {
 			return err
 		}

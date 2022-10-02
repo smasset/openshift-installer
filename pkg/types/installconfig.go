@@ -12,6 +12,7 @@ import (
 	"github.com/openshift/installer/pkg/types/aws"
 	"github.com/openshift/installer/pkg/types/azure"
 	"github.com/openshift/installer/pkg/types/baremetal"
+	"github.com/openshift/installer/pkg/types/flexibleengine"
 	"github.com/openshift/installer/pkg/types/gcp"
 	"github.com/openshift/installer/pkg/types/ibmcloud"
 	"github.com/openshift/installer/pkg/types/libvirt"
@@ -39,6 +40,7 @@ var (
 		alibabacloud.Name,
 		aws.Name,
 		azure.Name,
+		flexibleengine.Name,
 		gcp.Name,
 		ibmcloud.Name,
 		nutanix.Name,
@@ -225,6 +227,10 @@ type Platform struct {
 	// +optional
 	BareMetal *baremetal.Platform `json:"baremetal,omitempty"`
 
+	// FE is the configuration used when installing on Flexible Engine Platform.
+	// +optional
+	FE *flexibleengine.Platform `json:"flexibleengine,omitempty"`
+
 	// GCP is the configuration used when installing on Google Cloud Platform.
 	// +optional
 	GCP *gcp.Platform `json:"gcp,omitempty"`
@@ -277,6 +283,8 @@ func (p *Platform) Name() string {
 		return azure.Name
 	case p.BareMetal != nil:
 		return baremetal.Name
+	case p.FE != nil:
+		return flexibleengine.Name
 	case p.GCP != nil:
 		return gcp.Name
 	case p.IBMCloud != nil:

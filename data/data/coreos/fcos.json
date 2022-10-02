@@ -356,6 +356,19 @@
                         }
                     }
                 },
+                "flexibleengine": {
+                    "release": "36.20220806.3.0",
+                    "formats": {
+                        "qcow2.xz": {
+                            "disk": {
+                                "location": "https://builds.coreos.fedoraproject.org/prod/streams/stable/builds/36.20220806.3.0/x86_64/fedora-coreos-36.20220806.3.0-openstack.x86_64.qcow2.xz",
+                                "signature": "https://builds.coreos.fedoraproject.org/prod/streams/stable/builds/36.20220806.3.0/x86_64/fedora-coreos-36.20220806.3.0-openstack.x86_64.qcow2.xz.sig",
+                                "sha256": "e90dbeb07a72b3967b3f04d3e608f779414c6b91e784ca6efbb6912bae599a8b",
+                                "uncompressed-sha256": "3d4ceba91b135a207b52ba4c2a9f9b109a9ca71866ad28a41dd237861590737d"
+                            }
+                        }
+                    }
+                },
                 "gcp": {
                     "release": "36.20220806.3.0",
                     "formats": {
@@ -595,6 +608,14 @@
                             "image": "ami-0daba47d691950cd1"
                         }
                     }
+                },
+                "flexibleengine": {
+                  "regions": {
+                    "eu-west-0": {
+                      "release": "412.86.202209220614-0",
+                      "image": "ami-425bcbf0-530e-45e5-913c-d253b467c369"
+                    }
+                  }
                 },
                 "gcp": {
                     "release": "36.20220806.3.0",

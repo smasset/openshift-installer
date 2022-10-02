@@ -8,6 +8,7 @@ import (
 	"github.com/openshift/installer/pkg/terraform/stages/aws"
 	"github.com/openshift/installer/pkg/terraform/stages/azure"
 	"github.com/openshift/installer/pkg/terraform/stages/baremetal"
+	"github.com/openshift/installer/pkg/terraform/stages/flexibleengine"
 	"github.com/openshift/installer/pkg/terraform/stages/gcp"
 	"github.com/openshift/installer/pkg/terraform/stages/ibmcloud"
 	"github.com/openshift/installer/pkg/terraform/stages/libvirt"
@@ -20,6 +21,7 @@ import (
 	awstypes "github.com/openshift/installer/pkg/types/aws"
 	azuretypes "github.com/openshift/installer/pkg/types/azure"
 	baremetaltypes "github.com/openshift/installer/pkg/types/baremetal"
+	flexibleenginetypes "github.com/openshift/installer/pkg/types/flexibleengine"
 	gcptypes "github.com/openshift/installer/pkg/types/gcp"
 	ibmcloudtypes "github.com/openshift/installer/pkg/types/ibmcloud"
 	libvirttypes "github.com/openshift/installer/pkg/types/libvirt"
@@ -44,6 +46,8 @@ func StagesForPlatform(platform string) []terraform.Stage {
 		return azure.StackPlatformStages
 	case baremetaltypes.Name:
 		return baremetal.PlatformStages
+	case flexibleenginetypes.Name:
+		return flexibleengine.PlatformStages
 	case gcptypes.Name:
 		return gcp.PlatformStages
 	case ibmcloudtypes.Name:

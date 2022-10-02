@@ -16,6 +16,7 @@ import (
 	"github.com/openshift/installer/pkg/types/aws"
 	"github.com/openshift/installer/pkg/types/azure"
 	"github.com/openshift/installer/pkg/types/baremetal"
+	"github.com/openshift/installer/pkg/types/flexibleengine"
 	"github.com/openshift/installer/pkg/types/gcp"
 	"github.com/openshift/installer/pkg/types/ibmcloud"
 	"github.com/openshift/installer/pkg/types/libvirt"
@@ -71,6 +72,8 @@ func (a *PlatformCredsCheck) Generate(dependencies asset.Parents) error {
 		if azureSession.Credentials.ClientCertificatePath != "" && ic.Config.CredentialsMode != "manual" {
 			return fmt.Errorf("authentication with client certificates is only supported in manual credentials mode")
 		}
+	case flexibleengine.Name:
+		// TODO : check if needed for FE
 	case gcp.Name:
 		client, err := gcpconfig.NewClient(context.TODO())
 		if err != nil {

@@ -5,6 +5,7 @@ import (
 	"github.com/openshift/installer/pkg/types/aws"
 	"github.com/openshift/installer/pkg/types/azure"
 	"github.com/openshift/installer/pkg/types/baremetal"
+	"github.com/openshift/installer/pkg/types/flexibleengine"
 	"github.com/openshift/installer/pkg/types/gcp"
 	"github.com/openshift/installer/pkg/types/ibmcloud"
 	"github.com/openshift/installer/pkg/types/libvirt"
@@ -29,18 +30,19 @@ type ClusterMetadata struct {
 
 // ClusterPlatformMetadata contains metadata for platfrom.
 type ClusterPlatformMetadata struct {
-	AlibabaCloud *alibabacloud.Metadata `json:"alibabacloud,omitempty"`
-	AWS          *aws.Metadata          `json:"aws,omitempty"`
-	Azure        *azure.Metadata        `json:"azure,omitempty"`
-	BareMetal    *baremetal.Metadata    `json:"baremetal,omitempty"`
-	GCP          *gcp.Metadata          `json:"gcp,omitempty"`
-	IBMCloud     *ibmcloud.Metadata     `json:"ibmcloud,omitempty"`
-	Libvirt      *libvirt.Metadata      `json:"libvirt,omitempty"`
-	Nutanix      *nutanix.Metadata      `json:"nutanix,omitempty"`
-	OpenStack    *openstack.Metadata    `json:"openstack,omitempty"`
-	Ovirt        *ovirt.Metadata        `json:"ovirt,omitempty"`
-	PowerVS      *powervs.Metadata      `json:"powervs,omitempty"`
-	VSphere      *vsphere.Metadata      `json:"vsphere,omitempty"`
+	AlibabaCloud *alibabacloud.Metadata   `json:"alibabacloud,omitempty"`
+	AWS          *aws.Metadata            `json:"aws,omitempty"`
+	Azure        *azure.Metadata          `json:"azure,omitempty"`
+	BareMetal    *baremetal.Metadata      `json:"baremetal,omitempty"`
+	FE           *flexibleengine.Metadata `json:"fe,omitempty"`
+	GCP          *gcp.Metadata            `json:"gcp,omitempty"`
+	IBMCloud     *ibmcloud.Metadata       `json:"ibmcloud,omitempty"`
+	Libvirt      *libvirt.Metadata        `json:"libvirt,omitempty"`
+	Nutanix      *nutanix.Metadata        `json:"nutanix,omitempty"`
+	OpenStack    *openstack.Metadata      `json:"openstack,omitempty"`
+	Ovirt        *ovirt.Metadata          `json:"ovirt,omitempty"`
+	PowerVS      *powervs.Metadata        `json:"powervs,omitempty"`
+	VSphere      *vsphere.Metadata        `json:"vsphere,omitempty"`
 }
 
 // Platform returns a string representation of the platform
@@ -61,6 +63,9 @@ func (cpm *ClusterPlatformMetadata) Platform() string {
 	}
 	if cpm.BareMetal != nil {
 		return "baremetal"
+	}
+	if cpm.FE != nil {
+		return flexibleengine.Name
 	}
 	if cpm.GCP != nil {
 		return gcp.Name

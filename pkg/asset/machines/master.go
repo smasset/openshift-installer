@@ -36,6 +36,7 @@ import (
 	"github.com/openshift/installer/pkg/asset/machines/aws"
 	"github.com/openshift/installer/pkg/asset/machines/azure"
 	"github.com/openshift/installer/pkg/asset/machines/baremetal"
+	"github.com/openshift/installer/pkg/asset/machines/flexibleengine"
 	"github.com/openshift/installer/pkg/asset/machines/gcp"
 	"github.com/openshift/installer/pkg/asset/machines/ibmcloud"
 	"github.com/openshift/installer/pkg/asset/machines/libvirt"
@@ -53,6 +54,7 @@ import (
 	azuretypes "github.com/openshift/installer/pkg/types/azure"
 	azuredefaults "github.com/openshift/installer/pkg/types/azure/defaults"
 	baremetaltypes "github.com/openshift/installer/pkg/types/baremetal"
+	flexibleenginetypes "github.com/openshift/installer/pkg/types/flexibleengine"
 	gcptypes "github.com/openshift/installer/pkg/types/gcp"
 	ibmcloudtypes "github.com/openshift/installer/pkg/types/ibmcloud"
 	libvirttypes "github.com/openshift/installer/pkg/types/libvirt"
@@ -346,6 +348,11 @@ func (m *Master) Generate(dependencies asset.Parents) error {
 		}
 		m.NetworkConfigSecretFiles = append(m.NetworkConfigSecretFiles, networkSecrets...)
 
+	case flexibleenginetypes.Name:
+		machines, err = flexibleengine.Machines(clusterID.InfraID, ic, &pool, string(*rhcosImage), "master", masterUserDataSecretName)
+		if err != nil {
+			return errors.Wrap(err, "failed to create master machine objects")
+		}
 	case gcptypes.Name:
 		mpool := defaultGCPMachinePoolPlatform()
 		mpool.Set(ic.Platform.GCP.DefaultMachinePlatform)

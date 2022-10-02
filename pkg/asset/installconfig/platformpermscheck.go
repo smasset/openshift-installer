@@ -15,6 +15,7 @@ import (
 	"github.com/openshift/installer/pkg/types/aws"
 	"github.com/openshift/installer/pkg/types/azure"
 	"github.com/openshift/installer/pkg/types/baremetal"
+	"github.com/openshift/installer/pkg/types/flexibleengine"
 	"github.com/openshift/installer/pkg/types/gcp"
 	"github.com/openshift/installer/pkg/types/ibmcloud"
 	"github.com/openshift/installer/pkg/types/libvirt"
@@ -100,7 +101,7 @@ func (a *PlatformPermsCheck) Generate(dependencies asset.Parents) error {
 		if err != nil {
 			return err
 		}
-	case alibabacloud.Name, azure.Name, baremetal.Name, libvirt.Name, none.Name, nutanix.Name, openstack.Name, ovirt.Name, vsphere.Name:
+	case alibabacloud.Name, azure.Name, baremetal.Name, flexibleengine.Name, libvirt.Name, none.Name, nutanix.Name, openstack.Name, ovirt.Name, vsphere.Name:
 		// no permissions to check
 	default:
 		err = fmt.Errorf("unknown platform type %q", platform)

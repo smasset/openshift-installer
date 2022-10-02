@@ -53,6 +53,7 @@ import (
 	azuretypes "github.com/openshift/installer/pkg/types/azure"
 	azuredefaults "github.com/openshift/installer/pkg/types/azure/defaults"
 	baremetaltypes "github.com/openshift/installer/pkg/types/baremetal"
+	flexibleenginetypes "github.com/openshift/installer/pkg/types/flexibleengine"
 	gcptypes "github.com/openshift/installer/pkg/types/gcp"
 	ibmcloudtypes "github.com/openshift/installer/pkg/types/ibmcloud"
 	libvirttypes "github.com/openshift/installer/pkg/types/libvirt"
@@ -435,6 +436,7 @@ func (w *Worker) Generate(dependencies asset.Parents) error {
 			for _, set := range sets {
 				machineSets = append(machineSets, set)
 			}
+		case flexibleenginetypes.Name:
 		case gcptypes.Name:
 			mpool := defaultGCPMachinePoolPlatform()
 			mpool.Set(ic.Platform.GCP.DefaultMachinePlatform)

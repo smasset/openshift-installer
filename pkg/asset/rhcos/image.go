@@ -18,6 +18,7 @@ import (
 	"github.com/openshift/installer/pkg/types/aws"
 	"github.com/openshift/installer/pkg/types/azure"
 	"github.com/openshift/installer/pkg/types/baremetal"
+	"github.com/openshift/installer/pkg/types/flexibleengine"
 	"github.com/openshift/installer/pkg/types/gcp"
 	"github.com/openshift/installer/pkg/types/ibmcloud"
 	"github.com/openshift/installer/pkg/types/libvirt"
@@ -125,6 +126,9 @@ func osImage(config *types.InstallConfig) (string, error) {
 			return oi, nil
 		}
 		// Use image from release payload
+		return "", nil
+	case flexibleengine.Name:
+		// TODO : implement FE logic
 		return "", nil
 	case gcp.Name:
 		if streamArch.Images.Gcp != nil {

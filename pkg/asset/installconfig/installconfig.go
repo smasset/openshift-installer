@@ -15,6 +15,7 @@ import (
 	"github.com/openshift/installer/pkg/asset/installconfig/alibabacloud"
 	"github.com/openshift/installer/pkg/asset/installconfig/aws"
 	icazure "github.com/openshift/installer/pkg/asset/installconfig/azure"
+	icflexibleengine "github.com/openshift/installer/pkg/asset/installconfig/flexibleengine"
 	icgcp "github.com/openshift/installer/pkg/asset/installconfig/gcp"
 	icibmcloud "github.com/openshift/installer/pkg/asset/installconfig/ibmcloud"
 	icnutanix "github.com/openshift/installer/pkg/asset/installconfig/nutanix"
@@ -94,6 +95,7 @@ func (a *InstallConfig) Generate(parents asset.Parents) error {
 	a.Config.AWS = platform.AWS
 	a.Config.Azure = platform.Azure
 	a.Config.BareMetal = platform.BareMetal
+	a.Config.FE = platform.FE
 	a.Config.GCP = platform.GCP
 	a.Config.IBMCloud = platform.IBMCloud
 	a.Config.Libvirt = platform.Libvirt
@@ -216,6 +218,9 @@ func (a *InstallConfig) platformValidation() error {
 			return err
 		}
 		return icazure.Validate(client, a.Config)
+	}
+	if a.Config.Platform.FE != nil {
+		return icflexibleengine.Validate(a.Config)
 	}
 	if a.Config.Platform.GCP != nil {
 		client, err := icgcp.NewClient(context.TODO())
