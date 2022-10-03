@@ -55,7 +55,7 @@ function check_url() {
 
     if [[ "${URL_TYPE}" = "API_URL" ]]; then
         local URL_STAGE_NAME="check-api-url"
-    else 
+    else
         local URL_STAGE_NAME="check-api-int-url"
     fi
 

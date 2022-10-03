@@ -52,12 +52,12 @@ metadata:
 baseDomain: test-domain
 networking:
   clusterNetwork:
-  - cidr: 10.128.0.0/14 
-    hostPrefix: 23 
+  - cidr: 10.128.0.0/14
+    hostPrefix: 23
   networkType: OpenShiftSDN
   machineNetwork:
   - cidr: 192.168.122.0/23
-  serviceNetwork: 
+  serviceNetwork:
   - 172.30.0.0/16
 compute:
   - architecture: amd64
@@ -75,7 +75,7 @@ platform:
   baremetal:
     externalMACAddress: "52:54:00:f6:b4:02"
     provisioningMACAddress: "52:54:00:6e:3b:02"
-    ingressVIPs: 
+    ingressVIPs:
       - 192.168.122.11
     hosts:
       - name: host1
@@ -288,12 +288,12 @@ metadata:
 baseDomain: test-domain
 networking:
   clusterNetwork:
-  - cidr: 10.128.0.0/14 
-    hostPrefix: 23 
+  - cidr: 10.128.0.0/14
+    hostPrefix: 23
   networkType: OpenShiftSDN
   machineNetwork:
   - cidr: 192.168.122.0/23
-  serviceNetwork: 
+  serviceNetwork:
   - 172.30.0.0/16
 compute:
   - architecture: amd64
@@ -430,12 +430,12 @@ metadata:
 baseDomain: test-domain
 networking:
   clusterNetwork:
-  - cidr: 10.128.0.0/14 
-    hostPrefix: 23 
+  - cidr: 10.128.0.0/14
+    hostPrefix: 23
   networkType: OpenShiftSDN
   machineNetwork:
   - cidr: 192.168.122.0/23
-  serviceNetwork: 
+  serviceNetwork:
   - 172.30.0.0/16
 compute:
   - architecture: amd64
@@ -457,7 +457,7 @@ platform:
     datacenter: testDataCenter
     defaultDataStore: testDefaultDataStore
     apiVIP: 192.168.122.10
-    ingressVIPs: 
+    ingressVIPs:
       - 192.168.122.11
 pullSecret: "{\"auths\":{\"example.com\":{\"auth\":\"authorization value\"}}}"
 `,

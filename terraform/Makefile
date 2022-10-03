@@ -45,7 +45,7 @@ $(GO_CLEAN_TARGETS): go-clean.%:
 
 go-clean-providers:
 	rm -f bin/*/terraform-provider-*
-	
+
 go-clean-terraform:
 	rm -f bin/*/terraform
 

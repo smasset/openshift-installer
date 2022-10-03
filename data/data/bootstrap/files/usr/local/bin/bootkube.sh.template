@@ -360,7 +360,7 @@ fi
 # Check if the API and API_INT Server URLs can be resolved and reached.
 echo "Check if API and API-Int URLs are resolvable during bootstrap"
 API_SERVER_URL="{{.APIServerURL}}"
-API_INT_SERVER_URL="{{.APIIntServerURL}}" 
+API_INT_SERVER_URL="{{.APIIntServerURL}}"
 
 if [[ ! -z "${API_SERVER_URL}" ]] ; then
     check_url "API_URL" "${API_SERVER_URL}"
@@ -424,7 +424,7 @@ run_cluster_bootstrap() {
         "${CLUSTER_BOOTSTRAP_IMAGE}" \
         start --tear-down-early=false --asset-dir=/assets --required-pods="${REQUIRED_PODS}"
 }
-    
+
 if [ ! -f cb-bootstrap.done ]
 then
     if run_cluster_bootstrap
