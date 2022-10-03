@@ -95,6 +95,11 @@ func (a *platform) Generate(asset.Parents) error {
 		}
 	case none.Name:
 		a.None = &none.Platform{}
+	case nutanix.Name:
+		a.Nutanix, err = nutanixconfig.Platform()
+		if err != nil {
+			return err
+		}
 	case openstack.Name:
 		a.OpenStack, err = openstackconfig.Platform()
 		if err != nil {
@@ -105,18 +110,13 @@ func (a *platform) Generate(asset.Parents) error {
 		if err != nil {
 			return err
 		}
-	case vsphere.Name:
-		a.VSphere, err = vsphereconfig.Platform()
-		if err != nil {
-			return err
-		}
 	case powervs.Name:
 		a.PowerVS, err = powervsconfig.Platform()
 		if err != nil {
 			return err
 		}
-	case nutanix.Name:
-		a.Nutanix, err = nutanixconfig.Platform()
+	case vsphere.Name:
+		a.VSphere, err = vsphereconfig.Platform()
 		if err != nil {
 			return err
 		}

@@ -262,73 +262,6 @@ func (m *Master) Generate(dependencies asset.Parents) error {
 			return errors.Wrap(err, "failed to create master machine objects")
 		}
 		aws.ConfigMasters(machines, controlPlaneMachineSet, clusterID.InfraID, ic.Publish)
-	case gcptypes.Name:
-		mpool := defaultGCPMachinePoolPlatform()
-		mpool.Set(ic.Platform.GCP.DefaultMachinePlatform)
-		mpool.Set(pool.Platform.GCP)
-		if len(mpool.Zones) == 0 {
-			azs, err := gcp.AvailabilityZones(ic.Platform.GCP.ProjectID, ic.Platform.GCP.Region)
-			if err != nil {
-				return errors.Wrap(err, "failed to fetch availability zones")
-			}
-			mpool.Zones = azs
-		}
-		pool.Platform.GCP = &mpool
-		machines, err = gcp.Machines(clusterID.InfraID, ic, &pool, string(*rhcosImage), "master", masterUserDataSecretName)
-		if err != nil {
-			return errors.Wrap(err, "failed to create master machine objects")
-		}
-		gcp.ConfigMasters(machines, clusterID.InfraID, ic.Publish)
-	case ibmcloudtypes.Name:
-		subnets := map[string]string{}
-		if len(ic.Platform.IBMCloud.ControlPlaneSubnets) > 0 {
-			subnetMetas, err := installConfig.IBMCloud.ControlPlaneSubnets(ctx)
-			if err != nil {
-				return err
-			}
-			for _, subnet := range subnetMetas {
-				subnets[subnet.Zone] = subnet.Name
-			}
-		}
-		mpool := defaultIBMCloudMachinePoolPlatform()
-		mpool.Set(ic.Platform.IBMCloud.DefaultMachinePlatform)
-		mpool.Set(pool.Platform.IBMCloud)
-		if len(mpool.Zones) == 0 {
-			azs, err := ibmcloud.AvailabilityZones(ic.Platform.IBMCloud.Region)
-			if err != nil {
-				return errors.Wrap(err, "failed to fetch availability zones")
-			}
-			mpool.Zones = azs
-		}
-		pool.Platform.IBMCloud = &mpool
-		machines, err = ibmcloud.Machines(clusterID.InfraID, ic, subnets, &pool, "master", masterUserDataSecretName)
-		if err != nil {
-			return errors.Wrap(err, "failed to create master machine objects")
-		}
-		// TODO: IBM: implement ConfigMasters() if needed
-		// ibmcloud.ConfigMasters(machines, clusterID.InfraID, ic.Publish)
-	case libvirttypes.Name:
-		mpool := defaultLibvirtMachinePoolPlatform()
-		mpool.Set(ic.Platform.Libvirt.DefaultMachinePlatform)
-		mpool.Set(pool.Platform.Libvirt)
-		pool.Platform.Libvirt = &mpool
-		machines, err = libvirt.Machines(clusterID.InfraID, ic, &pool, "master", masterUserDataSecretName)
-		if err != nil {
-			return errors.Wrap(err, "failed to create master machine objects")
-		}
-	case openstacktypes.Name:
-		mpool := defaultOpenStackMachinePoolPlatform()
-		mpool.Set(ic.Platform.OpenStack.DefaultMachinePlatform)
-		mpool.Set(pool.Platform.OpenStack)
-		pool.Platform.OpenStack = &mpool
-
-		imageName, _ := rhcosutils.GenerateOpenStackImageName(string(*rhcosImage), clusterID.InfraID)
-
-		machines, err = openstack.Machines(clusterID.InfraID, ic, &pool, imageName, "master", masterUserDataSecretName)
-		if err != nil {
-			return errors.Wrap(err, "failed to create master machine objects")
-		}
-		openstack.ConfigMasters(machines, clusterID.InfraID)
 	case azuretypes.Name:
 		mpool := defaultAzureMachinePoolPlatform()
 		mpool.InstanceType = azuredefaults.ControlPlaneInstanceType(
@@ -413,6 +346,87 @@ func (m *Master) Generate(dependencies asset.Parents) error {
 		}
 		m.NetworkConfigSecretFiles = append(m.NetworkConfigSecretFiles, networkSecrets...)
 
+	case gcptypes.Name:
+		mpool := defaultGCPMachinePoolPlatform()
+		mpool.Set(ic.Platform.GCP.DefaultMachinePlatform)
+		mpool.Set(pool.Platform.GCP)
+		if len(mpool.Zones) == 0 {
+			azs, err := gcp.AvailabilityZones(ic.Platform.GCP.ProjectID, ic.Platform.GCP.Region)
+			if err != nil {
+				return errors.Wrap(err, "failed to fetch availability zones")
+			}
+			mpool.Zones = azs
+		}
+		pool.Platform.GCP = &mpool
+		machines, err = gcp.Machines(clusterID.InfraID, ic, &pool, string(*rhcosImage), "master", masterUserDataSecretName)
+		if err != nil {
+			return errors.Wrap(err, "failed to create master machine objects")
+		}
+		gcp.ConfigMasters(machines, clusterID.InfraID, ic.Publish)
+	case ibmcloudtypes.Name:
+		subnets := map[string]string{}
+		if len(ic.Platform.IBMCloud.ControlPlaneSubnets) > 0 {
+			subnetMetas, err := installConfig.IBMCloud.ControlPlaneSubnets(ctx)
+			if err != nil {
+				return err
+			}
+			for _, subnet := range subnetMetas {
+				subnets[subnet.Zone] = subnet.Name
+			}
+		}
+		mpool := defaultIBMCloudMachinePoolPlatform()
+		mpool.Set(ic.Platform.IBMCloud.DefaultMachinePlatform)
+		mpool.Set(pool.Platform.IBMCloud)
+		if len(mpool.Zones) == 0 {
+			azs, err := ibmcloud.AvailabilityZones(ic.Platform.IBMCloud.Region)
+			if err != nil {
+				return errors.Wrap(err, "failed to fetch availability zones")
+			}
+			mpool.Zones = azs
+		}
+		pool.Platform.IBMCloud = &mpool
+		machines, err = ibmcloud.Machines(clusterID.InfraID, ic, subnets, &pool, "master", masterUserDataSecretName)
+		if err != nil {
+			return errors.Wrap(err, "failed to create master machine objects")
+		}
+		// TODO: IBM: implement ConfigMasters() if needed
+		// ibmcloud.ConfigMasters(machines, clusterID.InfraID, ic.Publish)
+	case libvirttypes.Name:
+		mpool := defaultLibvirtMachinePoolPlatform()
+		mpool.Set(ic.Platform.Libvirt.DefaultMachinePlatform)
+		mpool.Set(pool.Platform.Libvirt)
+		pool.Platform.Libvirt = &mpool
+		machines, err = libvirt.Machines(clusterID.InfraID, ic, &pool, "master", masterUserDataSecretName)
+		if err != nil {
+			return errors.Wrap(err, "failed to create master machine objects")
+		}
+	case nonetypes.Name:
+	case nutanixtypes.Name:
+		mpool := defaultNutanixMachinePoolPlatform()
+		mpool.NumCPUs = 8
+		mpool.Set(ic.Platform.Nutanix.DefaultMachinePlatform)
+		mpool.Set(pool.Platform.Nutanix)
+		pool.Platform.Nutanix = &mpool
+		templateName := nutanixtypes.RHCOSImageName(clusterID.InfraID)
+
+		machines, err = nutanix.Machines(clusterID.InfraID, ic, &pool, templateName, "master", masterUserDataSecretName)
+		if err != nil {
+			return errors.Wrap(err, "failed to create master machine objects")
+		}
+		nutanix.ConfigMasters(machines, clusterID.InfraID)
+	case openstacktypes.Name:
+		mpool := defaultOpenStackMachinePoolPlatform()
+		mpool.Set(ic.Platform.OpenStack.DefaultMachinePlatform)
+		mpool.Set(pool.Platform.OpenStack)
+		pool.Platform.OpenStack = &mpool
+
+		imageName, _ := rhcosutils.GenerateOpenStackImageName(string(*rhcosImage), clusterID.InfraID)
+
+		machines, err = openstack.Machines(clusterID.InfraID, ic, &pool, imageName, "master", masterUserDataSecretName)
+		if err != nil {
+			return errors.Wrap(err, "failed to create master machine objects")
+		}
+		openstack.ConfigMasters(machines, clusterID.InfraID)
 	case ovirttypes.Name:
 		mpool := defaultOvirtMachinePoolPlatform()
 		mpool.VMType = ovirttypes.VMTypeHighPerformance
@@ -426,6 +440,19 @@ func (m *Master) Generate(dependencies asset.Parents) error {
 		if err != nil {
 			return errors.Wrap(err, "failed to create master machine objects for ovirt provider")
 		}
+	case powervstypes.Name:
+		mpool := defaultPowerVSMachinePoolPlatform()
+		mpool.Set(ic.Platform.PowerVS.DefaultMachinePlatform)
+		mpool.Set(pool.Platform.PowerVS)
+		// Only the service instance is guaranteed to exist and be passed via the install config
+		// The other two, we should standardize a name including the cluster id. At this point, all
+		// we have are names.
+		pool.Platform.PowerVS = &mpool
+		machines, err = powervs.Machines(clusterID.InfraID, ic, &pool, "master", "master-user-data")
+		if err != nil {
+			return errors.Wrap(err, "failed to create master machine objects")
+		}
+		powervs.ConfigMasters(machines, clusterID.InfraID)
 	case vspheretypes.Name:
 		mpool := defaultVSphereMachinePoolPlatform()
 		mpool.NumCPUs = 4
@@ -458,33 +485,6 @@ func (m *Master) Generate(dependencies asset.Parents) error {
 			return errors.Wrap(err, "failed to create master machine objects")
 		}
 		vsphere.ConfigMasters(machines, clusterID.InfraID)
-	case powervstypes.Name:
-		mpool := defaultPowerVSMachinePoolPlatform()
-		mpool.Set(ic.Platform.PowerVS.DefaultMachinePlatform)
-		mpool.Set(pool.Platform.PowerVS)
-		// Only the service instance is guaranteed to exist and be passed via the install config
-		// The other two, we should standardize a name including the cluster id. At this point, all
-		// we have are names.
-		pool.Platform.PowerVS = &mpool
-		machines, err = powervs.Machines(clusterID.InfraID, ic, &pool, "master", "master-user-data")
-		if err != nil {
-			return errors.Wrap(err, "failed to create master machine objects")
-		}
-		powervs.ConfigMasters(machines, clusterID.InfraID)
-	case nonetypes.Name:
-	case nutanixtypes.Name:
-		mpool := defaultNutanixMachinePoolPlatform()
-		mpool.NumCPUs = 8
-		mpool.Set(ic.Platform.Nutanix.DefaultMachinePlatform)
-		mpool.Set(pool.Platform.Nutanix)
-		pool.Platform.Nutanix = &mpool
-		templateName := nutanixtypes.RHCOSImageName(clusterID.InfraID)
-
-		machines, err = nutanix.Machines(clusterID.InfraID, ic, &pool, templateName, "master", masterUserDataSecretName)
-		if err != nil {
-			return errors.Wrap(err, "failed to create master machine objects")
-		}
-		nutanix.ConfigMasters(machines, clusterID.InfraID)
 	default:
 		return fmt.Errorf("invalid Platform")
 	}

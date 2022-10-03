@@ -94,6 +94,12 @@ func (i *Infrastructure) Generate(dependencies asset.Parents) error {
 	config.Status.ControlPlaneTopology = controlPlaneTopology
 
 	switch installConfig.Config.Platform.Name() {
+	case alibabacloud.Name:
+		config.Spec.PlatformSpec.Type = configv1.AlibabaCloudPlatformType
+		config.Status.PlatformStatus.AlibabaCloud = &configv1.AlibabaCloudPlatformStatus{
+			Region:          installConfig.Config.Platform.AlibabaCloud.Region,
+			ResourceGroupID: installConfig.Config.Platform.AlibabaCloud.ResourceGroupID,
+		}
 	case aws.Name:
 		config.Spec.PlatformSpec.Type = configv1.AWSPlatformType
 		config.Spec.PlatformSpec.AWS = &configv1.AWSPlatformSpec{}
@@ -138,12 +144,6 @@ func (i *Infrastructure) Generate(dependencies asset.Parents) error {
 		}
 		if installConfig.Config.Platform.Azure.CloudName == azure.StackCloud {
 			config.Status.PlatformStatus.Azure.ARMEndpoint = installConfig.Config.Platform.Azure.ARMEndpoint
-		}
-	case alibabacloud.Name:
-		config.Spec.PlatformSpec.Type = configv1.AlibabaCloudPlatformType
-		config.Status.PlatformStatus.AlibabaCloud = &configv1.AlibabaCloudPlatformStatus{
-			Region:          installConfig.Config.Platform.AlibabaCloud.Region,
-			ResourceGroupID: installConfig.Config.Platform.AlibabaCloud.ResourceGroupID,
 		}
 	case baremetal.Name:
 		config.Spec.PlatformSpec.Type = configv1.BareMetalPlatformType
@@ -195,62 +195,6 @@ func (i *Infrastructure) Generate(dependencies asset.Parents) error {
 		config.Spec.PlatformSpec.Type = configv1.LibvirtPlatformType
 	case none.Name:
 		config.Spec.PlatformSpec.Type = configv1.NonePlatformType
-	case openstack.Name:
-		config.Spec.PlatformSpec.Type = configv1.OpenStackPlatformType
-		config.Status.PlatformStatus.OpenStack = &configv1.OpenStackPlatformStatus{
-			APIServerInternalIP:  installConfig.Config.OpenStack.APIVIPs[0],
-			IngressIP:            installConfig.Config.OpenStack.IngressVIPs[0],
-			APIServerInternalIPs: installConfig.Config.OpenStack.APIVIPs,
-			IngressIPs:           installConfig.Config.OpenStack.IngressVIPs,
-		}
-	case vsphere.Name:
-		config.Spec.PlatformSpec.Type = configv1.VSpherePlatformType
-		if len(installConfig.Config.VSphere.APIVIPs) > 0 {
-			config.Status.PlatformStatus.VSphere = &configv1.VSpherePlatformStatus{
-				APIServerInternalIP:  installConfig.Config.VSphere.APIVIPs[0],
-				IngressIP:            installConfig.Config.VSphere.IngressVIPs[0],
-				APIServerInternalIPs: installConfig.Config.VSphere.APIVIPs,
-				IngressIPs:           installConfig.Config.VSphere.IngressVIPs,
-			}
-		}
-		config.Spec.PlatformSpec.VSphere = vsphereinfra.GetInfraPlatformSpec(installConfig)
-
-		if _, exists := cloudproviderconfig.ConfigMap.Data["vsphere.conf"]; exists {
-			cloudProviderConfigMapKey = "vsphere.conf"
-		}
-
-	case ovirt.Name:
-		config.Spec.PlatformSpec.Type = configv1.OvirtPlatformType
-		config.Status.PlatformStatus.Ovirt = &configv1.OvirtPlatformStatus{
-			APIServerInternalIP:  installConfig.Config.Ovirt.APIVIPs[0],
-			IngressIP:            installConfig.Config.Ovirt.IngressVIPs[0],
-			APIServerInternalIPs: installConfig.Config.Ovirt.APIVIPs,
-			IngressIPs:           installConfig.Config.Ovirt.IngressVIPs,
-		}
-	case powervs.Name:
-		config.Spec.PlatformSpec.Type = configv1.PowerVSPlatformType
-		var cisInstanceCRN, dnsInstanceCRN string
-		var err error
-		switch installConfig.Config.Publish {
-		case types.InternalPublishingStrategy:
-			dnsInstanceCRN, err = installConfig.PowerVS.DNSInstanceCRN(context.TODO())
-			if err != nil {
-				return errors.Wrapf(err, "failed to get instance CRN")
-			}
-		case types.ExternalPublishingStrategy:
-			cisInstanceCRN, err = installConfig.PowerVS.CISInstanceCRN(context.TODO())
-			if err != nil {
-				return errors.Wrapf(err, "failed to get instance CRN")
-			}
-		default:
-			return errors.New("unknown publishing strategy")
-		}
-		config.Status.PlatformStatus.PowerVS = &configv1.PowerVSPlatformStatus{
-			Region:         installConfig.Config.Platform.PowerVS.Region,
-			Zone:           installConfig.Config.Platform.PowerVS.Zone,
-			CISInstanceCRN: cisInstanceCRN,
-			DNSInstanceCRN: dnsInstanceCRN,
-		}
 	case nutanix.Name:
 		nutanixPlatform := installConfig.Config.Nutanix
 
@@ -297,6 +241,62 @@ func (i *Infrastructure) Generate(dependencies asset.Parents) error {
 				IngressIPs:           installConfig.Config.Nutanix.IngressVIPs,
 			}
 		}
+	case openstack.Name:
+		config.Spec.PlatformSpec.Type = configv1.OpenStackPlatformType
+		config.Status.PlatformStatus.OpenStack = &configv1.OpenStackPlatformStatus{
+			APIServerInternalIP:  installConfig.Config.OpenStack.APIVIPs[0],
+			IngressIP:            installConfig.Config.OpenStack.IngressVIPs[0],
+			APIServerInternalIPs: installConfig.Config.OpenStack.APIVIPs,
+			IngressIPs:           installConfig.Config.OpenStack.IngressVIPs,
+		}
+	case ovirt.Name:
+		config.Spec.PlatformSpec.Type = configv1.OvirtPlatformType
+		config.Status.PlatformStatus.Ovirt = &configv1.OvirtPlatformStatus{
+			APIServerInternalIP:  installConfig.Config.Ovirt.APIVIPs[0],
+			IngressIP:            installConfig.Config.Ovirt.IngressVIPs[0],
+			APIServerInternalIPs: installConfig.Config.Ovirt.APIVIPs,
+			IngressIPs:           installConfig.Config.Ovirt.IngressVIPs,
+		}
+	case powervs.Name:
+		config.Spec.PlatformSpec.Type = configv1.PowerVSPlatformType
+		var cisInstanceCRN, dnsInstanceCRN string
+		var err error
+		switch installConfig.Config.Publish {
+		case types.InternalPublishingStrategy:
+			dnsInstanceCRN, err = installConfig.PowerVS.DNSInstanceCRN(context.TODO())
+			if err != nil {
+				return errors.Wrapf(err, "failed to get instance CRN")
+			}
+		case types.ExternalPublishingStrategy:
+			cisInstanceCRN, err = installConfig.PowerVS.CISInstanceCRN(context.TODO())
+			if err != nil {
+				return errors.Wrapf(err, "failed to get instance CRN")
+			}
+		default:
+			return errors.New("unknown publishing strategy")
+		}
+		config.Status.PlatformStatus.PowerVS = &configv1.PowerVSPlatformStatus{
+			Region:         installConfig.Config.Platform.PowerVS.Region,
+			Zone:           installConfig.Config.Platform.PowerVS.Zone,
+			CISInstanceCRN: cisInstanceCRN,
+			DNSInstanceCRN: dnsInstanceCRN,
+		}
+	case vsphere.Name:
+		config.Spec.PlatformSpec.Type = configv1.VSpherePlatformType
+		if len(installConfig.Config.VSphere.APIVIPs) > 0 {
+			config.Status.PlatformStatus.VSphere = &configv1.VSpherePlatformStatus{
+				APIServerInternalIP:  installConfig.Config.VSphere.APIVIPs[0],
+				IngressIP:            installConfig.Config.VSphere.IngressVIPs[0],
+				APIServerInternalIPs: installConfig.Config.VSphere.APIVIPs,
+				IngressIPs:           installConfig.Config.VSphere.IngressVIPs,
+			}
+		}
+		config.Spec.PlatformSpec.VSphere = vsphereinfra.GetInfraPlatformSpec(installConfig)
+
+		if _, exists := cloudproviderconfig.ConfigMap.Data["vsphere.conf"]; exists {
+			cloudProviderConfigMapKey = "vsphere.conf"
+		}
+
 	default:
 		config.Spec.PlatformSpec.Type = configv1.NonePlatformType
 	}

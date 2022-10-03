@@ -197,6 +197,76 @@ func (t *TerraformVariables) Generate(parents asset.Parents) error {
 	}
 
 	switch platform {
+	case alibabacloud.Name:
+		client, err := installConfig.AlibabaCloud.Client()
+		if err != nil {
+			return errors.Wrapf(err, "failed to create new client use region %s", installConfig.Config.Platform.AlibabaCloud.Region)
+		}
+		bucket := fmt.Sprintf("%s-bootstrap", clusterID.InfraID)
+		object := "bootstrap.ign"
+		signURL, err := client.GetOSSObjectSignURL(bucket, object)
+		if err != nil {
+			return errors.Wrapf(err, "failed to get a presigned URL for OSS object %s", object)
+		}
+
+		auth := alibabacloudtfvars.Auth{
+			AccessKey: client.AccessKeyID,
+			SecretKey: client.AccessKeySecret,
+		}
+
+		masters, err := mastersAsset.Machines()
+		if err != nil {
+			return errors.Wrapf(err, "failed to get master machine info")
+		}
+		masterConfigs := make([]*machinev1.AlibabaCloudMachineProviderConfig, len(masters))
+		for i, m := range masters {
+			masterConfigs[i] = m.Spec.ProviderSpec.Value.Object.(*machinev1.AlibabaCloudMachineProviderConfig)
+		}
+		workers, err := workersAsset.MachineSets()
+		if err != nil {
+			return errors.Wrapf(err, "failed to get worker machine info")
+		}
+		workerConfigs := make([]*machinev1.AlibabaCloudMachineProviderConfig, len(workers))
+		for i, w := range workers {
+			workerConfigs[i] = w.Spec.Template.Spec.ProviderSpec.Value.Object.(*machinev1.AlibabaCloudMachineProviderConfig)
+		}
+
+		natGatewayZones, err := client.ListEnhanhcedNatGatewayAvailableZones()
+		if err != nil {
+			return errors.Wrapf(err, "failed to list avaliable zones for NAT gateway")
+		}
+		natGatewayZoneID := natGatewayZones.Zones[0].ZoneId
+
+		vswitchIDs := []string{}
+		if len(installConfig.Config.AlibabaCloud.VSwitchIDs) > 0 {
+			vswitchIDs = installConfig.Config.AlibabaCloud.VSwitchIDs
+		}
+		data, err := alibabacloudtfvars.TFVars(
+			alibabacloudtfvars.TFVarsSources{
+				Auth:                  auth,
+				VpcID:                 installConfig.Config.AlibabaCloud.VpcID,
+				VSwitchIDs:            vswitchIDs,
+				PrivateZoneID:         installConfig.Config.AlibabaCloud.PrivateZoneID,
+				ResourceGroupID:       installConfig.Config.AlibabaCloud.ResourceGroupID,
+				BaseDomain:            installConfig.Config.BaseDomain,
+				NatGatewayZoneID:      natGatewayZoneID,
+				MasterConfigs:         masterConfigs,
+				WorkerConfigs:         workerConfigs,
+				IgnitionBucket:        bucket,
+				IgnitionPresignedURL:  signURL,
+				AdditionalTrustBundle: installConfig.Config.AdditionalTrustBundle,
+				Architecture:          installConfig.Config.ControlPlane.Architecture,
+				Publish:               installConfig.Config.Publish,
+				Proxy:                 installConfig.Config.Proxy,
+			},
+		)
+		if err != nil {
+			return errors.Wrapf(err, "failed to get %s Terraform variables", platform)
+		}
+		t.FileList = append(t.FileList, &asset.File{
+			Filename: TfPlatformVarsFileName,
+			Data:     data,
+		})
 	case aws.Name:
 		var vpc string
 		var privateSubnets []string
@@ -370,6 +440,38 @@ func (t *TerraformVariables) Generate(parents asset.Parents) error {
 				HyperVGeneration:                hyperVGeneration,
 				VMArchitecture:                  installConfig.Config.ControlPlane.Architecture,
 			},
+		)
+		if err != nil {
+			return errors.Wrapf(err, "failed to get %s Terraform variables", platform)
+		}
+		t.FileList = append(t.FileList, &asset.File{
+			Filename: TfPlatformVarsFileName,
+			Data:     data,
+		})
+	case baremetal.Name:
+		var imageCacheIP string
+		if installConfig.Config.Platform.BareMetal.ProvisioningNetwork == baremetal.DisabledProvisioningNetwork {
+			imageCacheIP = installConfig.Config.Platform.BareMetal.APIVIPs[0]
+		} else {
+			imageCacheIP = installConfig.Config.Platform.BareMetal.BootstrapProvisioningIP
+		}
+
+		data, err = baremetaltfvars.TFVars(
+			*installConfig.Config.ControlPlane.Replicas,
+			installConfig.Config.Platform.BareMetal.LibvirtURI,
+			installConfig.Config.Platform.BareMetal.APIVIPs[0],
+			imageCacheIP,
+			string(*rhcosBootstrapImage),
+			installConfig.Config.Platform.BareMetal.ExternalBridge,
+			installConfig.Config.Platform.BareMetal.ExternalMACAddress,
+			installConfig.Config.Platform.BareMetal.ProvisioningBridge,
+			installConfig.Config.Platform.BareMetal.ProvisioningMACAddress,
+			installConfig.Config.Platform.BareMetal.Hosts,
+			mastersAsset.HostFiles,
+			string(*rhcosImage),
+			ironicCreds.Username,
+			ironicCreds.Password,
+			masterIgn,
 		)
 		if err != nil {
 			return errors.Wrapf(err, "failed to get %s Terraform variables", platform)
@@ -668,14 +770,34 @@ func (t *TerraformVariables) Generate(parents asset.Parents) error {
 			Filename: TfPlatformVarsFileName,
 			Data:     data,
 		})
-	case openstack.Name:
-		data, err = openstacktfvars.TFVars(
-			installConfig,
-			mastersAsset,
-			workersAsset,
-			string(*rhcosImage),
-			clusterID,
-			bootstrapIgn,
+	case nutanix.Name:
+		if rhcosImage == nil {
+			return errors.New("unable to retrieve rhcos image")
+		}
+		controlPlanes, err := mastersAsset.Machines()
+		if err != nil {
+			return errors.Wrapf(err, "error getting control plane machines")
+		}
+		controlPlaneConfigs := make([]*machinev1.NutanixMachineProviderConfig, len(controlPlanes))
+		for i, c := range controlPlanes {
+			controlPlaneConfigs[i] = c.Spec.ProviderSpec.Value.Object.(*machinev1.NutanixMachineProviderConfig)
+		}
+
+		imgURI := string(*rhcosImage)
+		if installConfig.Config.Nutanix.ClusterOSImage != "" {
+			imgURI = installConfig.Config.Nutanix.ClusterOSImage
+		}
+		data, err = nutanixtfvars.TFVars(
+			nutanixtfvars.TFVarsSources{
+				PrismCentralAddress:   installConfig.Config.Nutanix.PrismCentral.Endpoint.Address,
+				Port:                  strconv.Itoa(int(installConfig.Config.Nutanix.PrismCentral.Endpoint.Port)),
+				Username:              installConfig.Config.Nutanix.PrismCentral.Username,
+				Password:              installConfig.Config.Nutanix.PrismCentral.Password,
+				ImageURI:              imgURI,
+				BootstrapIgnitionData: bootstrapIgn,
+				ClusterID:             clusterID.InfraID,
+				ControlPlaneConfigs:   controlPlaneConfigs,
+			},
 		)
 		if err != nil {
 			return errors.Wrapf(err, "failed to get %s Terraform variables", platform)
@@ -684,30 +806,14 @@ func (t *TerraformVariables) Generate(parents asset.Parents) error {
 			Filename: TfPlatformVarsFileName,
 			Data:     data,
 		})
-	case baremetal.Name:
-		var imageCacheIP string
-		if installConfig.Config.Platform.BareMetal.ProvisioningNetwork == baremetal.DisabledProvisioningNetwork {
-			imageCacheIP = installConfig.Config.Platform.BareMetal.APIVIPs[0]
-		} else {
-			imageCacheIP = installConfig.Config.Platform.BareMetal.BootstrapProvisioningIP
-		}
-
-		data, err = baremetaltfvars.TFVars(
-			*installConfig.Config.ControlPlane.Replicas,
-			installConfig.Config.Platform.BareMetal.LibvirtURI,
-			installConfig.Config.Platform.BareMetal.APIVIPs[0],
-			imageCacheIP,
-			string(*rhcosBootstrapImage),
-			installConfig.Config.Platform.BareMetal.ExternalBridge,
-			installConfig.Config.Platform.BareMetal.ExternalMACAddress,
-			installConfig.Config.Platform.BareMetal.ProvisioningBridge,
-			installConfig.Config.Platform.BareMetal.ProvisioningMACAddress,
-			installConfig.Config.Platform.BareMetal.Hosts,
-			mastersAsset.HostFiles,
+	case openstack.Name:
+		data, err = openstacktfvars.TFVars(
+			installConfig,
+			mastersAsset,
+			workersAsset,
 			string(*rhcosImage),
-			ironicCreds.Username,
-			ironicCreds.Password,
-			masterIgn,
+			clusterID,
+			bootstrapIgn,
 		)
 		if err != nil {
 			return errors.Wrapf(err, "failed to get %s Terraform variables", platform)
@@ -919,112 +1025,6 @@ func (t *TerraformVariables) Generate(parents asset.Parents) error {
 			Data:     data,
 		})
 
-	case alibabacloud.Name:
-		client, err := installConfig.AlibabaCloud.Client()
-		if err != nil {
-			return errors.Wrapf(err, "failed to create new client use region %s", installConfig.Config.Platform.AlibabaCloud.Region)
-		}
-		bucket := fmt.Sprintf("%s-bootstrap", clusterID.InfraID)
-		object := "bootstrap.ign"
-		signURL, err := client.GetOSSObjectSignURL(bucket, object)
-		if err != nil {
-			return errors.Wrapf(err, "failed to get a presigned URL for OSS object %s", object)
-		}
-
-		auth := alibabacloudtfvars.Auth{
-			AccessKey: client.AccessKeyID,
-			SecretKey: client.AccessKeySecret,
-		}
-
-		masters, err := mastersAsset.Machines()
-		if err != nil {
-			return errors.Wrapf(err, "failed to get master machine info")
-		}
-		masterConfigs := make([]*machinev1.AlibabaCloudMachineProviderConfig, len(masters))
-		for i, m := range masters {
-			masterConfigs[i] = m.Spec.ProviderSpec.Value.Object.(*machinev1.AlibabaCloudMachineProviderConfig)
-		}
-		workers, err := workersAsset.MachineSets()
-		if err != nil {
-			return errors.Wrapf(err, "failed to get worker machine info")
-		}
-		workerConfigs := make([]*machinev1.AlibabaCloudMachineProviderConfig, len(workers))
-		for i, w := range workers {
-			workerConfigs[i] = w.Spec.Template.Spec.ProviderSpec.Value.Object.(*machinev1.AlibabaCloudMachineProviderConfig)
-		}
-
-		natGatewayZones, err := client.ListEnhanhcedNatGatewayAvailableZones()
-		if err != nil {
-			return errors.Wrapf(err, "failed to list avaliable zones for NAT gateway")
-		}
-		natGatewayZoneID := natGatewayZones.Zones[0].ZoneId
-
-		vswitchIDs := []string{}
-		if len(installConfig.Config.AlibabaCloud.VSwitchIDs) > 0 {
-			vswitchIDs = installConfig.Config.AlibabaCloud.VSwitchIDs
-		}
-		data, err := alibabacloudtfvars.TFVars(
-			alibabacloudtfvars.TFVarsSources{
-				Auth:                  auth,
-				VpcID:                 installConfig.Config.AlibabaCloud.VpcID,
-				VSwitchIDs:            vswitchIDs,
-				PrivateZoneID:         installConfig.Config.AlibabaCloud.PrivateZoneID,
-				ResourceGroupID:       installConfig.Config.AlibabaCloud.ResourceGroupID,
-				BaseDomain:            installConfig.Config.BaseDomain,
-				NatGatewayZoneID:      natGatewayZoneID,
-				MasterConfigs:         masterConfigs,
-				WorkerConfigs:         workerConfigs,
-				IgnitionBucket:        bucket,
-				IgnitionPresignedURL:  signURL,
-				AdditionalTrustBundle: installConfig.Config.AdditionalTrustBundle,
-				Architecture:          installConfig.Config.ControlPlane.Architecture,
-				Publish:               installConfig.Config.Publish,
-				Proxy:                 installConfig.Config.Proxy,
-			},
-		)
-		if err != nil {
-			return errors.Wrapf(err, "failed to get %s Terraform variables", platform)
-		}
-		t.FileList = append(t.FileList, &asset.File{
-			Filename: TfPlatformVarsFileName,
-			Data:     data,
-		})
-	case nutanix.Name:
-		if rhcosImage == nil {
-			return errors.New("unable to retrieve rhcos image")
-		}
-		controlPlanes, err := mastersAsset.Machines()
-		if err != nil {
-			return errors.Wrapf(err, "error getting control plane machines")
-		}
-		controlPlaneConfigs := make([]*machinev1.NutanixMachineProviderConfig, len(controlPlanes))
-		for i, c := range controlPlanes {
-			controlPlaneConfigs[i] = c.Spec.ProviderSpec.Value.Object.(*machinev1.NutanixMachineProviderConfig)
-		}
-
-		imgURI := string(*rhcosImage)
-		if installConfig.Config.Nutanix.ClusterOSImage != "" {
-			imgURI = installConfig.Config.Nutanix.ClusterOSImage
-		}
-		data, err = nutanixtfvars.TFVars(
-			nutanixtfvars.TFVarsSources{
-				PrismCentralAddress:   installConfig.Config.Nutanix.PrismCentral.Endpoint.Address,
-				Port:                  strconv.Itoa(int(installConfig.Config.Nutanix.PrismCentral.Endpoint.Port)),
-				Username:              installConfig.Config.Nutanix.PrismCentral.Username,
-				Password:              installConfig.Config.Nutanix.PrismCentral.Password,
-				ImageURI:              imgURI,
-				BootstrapIgnitionData: bootstrapIgn,
-				ClusterID:             clusterID.InfraID,
-				ControlPlaneConfigs:   controlPlaneConfigs,
-			},
-		)
-		if err != nil {
-			return errors.Wrapf(err, "failed to get %s Terraform variables", platform)
-		}
-		t.FileList = append(t.FileList, &asset.File{
-			Filename: TfPlatformVarsFileName,
-			Data:     data,
-		})
 	default:
 		logrus.Warnf("unrecognized platform %s", platform)
 	}

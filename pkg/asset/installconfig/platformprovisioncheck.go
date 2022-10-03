@@ -52,6 +52,12 @@ func (a *PlatformProvisionCheck) Generate(dependencies asset.Parents) error {
 	var err error
 	platform := ic.Config.Platform.Name()
 	switch platform {
+	case alibabacloud.Name:
+		client, err := ic.AlibabaCloud.Client()
+		if err != nil {
+			return err
+		}
+		err = alibabacloudconfig.ValidateForProvisioning(client, ic.Config, ic.AlibabaCloud)
 	case aws.Name:
 		session, err := ic.AWS.Session(context.TODO())
 		if err != nil {
@@ -108,11 +114,27 @@ func (a *PlatformProvisionCheck) Generate(dependencies asset.Parents) error {
 		if err != nil {
 			return err
 		}
+	case nutanix.Name:
+		err = nutanixconfig.ValidateForProvisioning(ic.Config)
+		if err != nil {
+			return err
+		}
 	case openstack.Name:
 		err = osconfig.ValidateForProvisioning(ic.Config)
 		if err != nil {
 			return err
 		}
+	case ovirt.Name:
+		err = ovirtconfig.ValidateForProvisioning(ic.Config)
+		if err != nil {
+			return err
+		}
+	case powervs.Name:
+		client, err := powervsconfig.NewClient()
+		if err != nil {
+			return err
+		}
+		err = powervsconfig.ValidatePreExistingDNS(client, ic.Config, ic.PowerVS)
 	case vsphere.Name:
 		if len(ic.Config.VSphere.VCenters) > 0 {
 			err = vsconfig.ValidateMultiZoneForProvisioning(ic.Config)
@@ -122,30 +144,8 @@ func (a *PlatformProvisionCheck) Generate(dependencies asset.Parents) error {
 		if err != nil {
 			return err
 		}
-	case ovirt.Name:
-		err = ovirtconfig.ValidateForProvisioning(ic.Config)
-		if err != nil {
-			return err
-		}
-	case alibabacloud.Name:
-		client, err := ic.AlibabaCloud.Client()
-		if err != nil {
-			return err
-		}
-		err = alibabacloudconfig.ValidateForProvisioning(client, ic.Config, ic.AlibabaCloud)
-	case powervs.Name:
-		client, err := powervsconfig.NewClient()
-		if err != nil {
-			return err
-		}
-		err = powervsconfig.ValidatePreExistingDNS(client, ic.Config, ic.PowerVS)
 	case libvirt.Name, none.Name:
 		// no special provisioning requirements to check
-	case nutanix.Name:
-		err = nutanixconfig.ValidateForProvisioning(ic.Config)
-		if err != nil {
-			return err
-		}
 	default:
 		err = fmt.Errorf("unknown platform type %q", platform)
 	}

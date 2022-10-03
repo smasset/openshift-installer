@@ -170,7 +170,7 @@ func (a *PlatformQuotaCheck) Generate(dependencies asset.Parents) error {
 				return errors.Wrap(err, "failed to meet the prerequisite of one DHCP service per Power VS instance")
 			}
 		}
-	case alibabacloud.Name, azure.Name, baremetal.Name, ibmcloud.Name, libvirt.Name, none.Name, ovirt.Name, vsphere.Name, nutanix.Name:
+	case alibabacloud.Name, azure.Name, baremetal.Name, ibmcloud.Name, libvirt.Name, none.Name, nutanix.Name, ovirt.Name, vsphere.Name:
 		// no special provisioning requirements to check
 	default:
 		err = fmt.Errorf("unknown platform type %q", platform)

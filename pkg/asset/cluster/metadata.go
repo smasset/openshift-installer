@@ -77,31 +77,31 @@ func (m *Metadata) Generate(parents asset.Parents) (err error) {
 	}
 
 	switch installConfig.Config.Platform.Name() {
+	case alibabacloudtypes.Name:
+		metadata.ClusterPlatformMetadata.AlibabaCloud = alibabacloud.Metadata(installConfig.Config)
 	case awstypes.Name:
 		metadata.ClusterPlatformMetadata.AWS = aws.Metadata(clusterID.UUID, clusterID.InfraID, installConfig.Config)
-	case libvirttypes.Name:
-		metadata.ClusterPlatformMetadata.Libvirt = libvirt.Metadata(installConfig.Config)
-	case openstacktypes.Name:
-		metadata.ClusterPlatformMetadata.OpenStack = openstack.Metadata(clusterID.InfraID, installConfig.Config)
 	case azuretypes.Name:
 		metadata.ClusterPlatformMetadata.Azure = azure.Metadata(installConfig.Config)
+	case baremetaltypes.Name:
+		metadata.ClusterPlatformMetadata.BareMetal = baremetal.Metadata(installConfig.Config)
 	case gcptypes.Name:
 		metadata.ClusterPlatformMetadata.GCP = gcp.Metadata(installConfig.Config)
 	case ibmcloudtypes.Name:
 		metadata.ClusterPlatformMetadata.IBMCloud = ibmcloud.Metadata(clusterID.InfraID, installConfig.Config, installConfig.IBMCloud)
-	case baremetaltypes.Name:
-		metadata.ClusterPlatformMetadata.BareMetal = baremetal.Metadata(installConfig.Config)
-	case ovirttypes.Name:
-		metadata.ClusterPlatformMetadata.Ovirt = ovirt.Metadata(installConfig.Config)
-	case vspheretypes.Name:
-		metadata.ClusterPlatformMetadata.VSphere = vsphere.Metadata(installConfig.Config)
-	case alibabacloudtypes.Name:
-		metadata.ClusterPlatformMetadata.AlibabaCloud = alibabacloud.Metadata(installConfig.Config)
-	case powervstypes.Name:
-		metadata.ClusterPlatformMetadata.PowerVS = powervs.Metadata(installConfig.Config, installConfig.PowerVS)
+	case libvirttypes.Name:
+		metadata.ClusterPlatformMetadata.Libvirt = libvirt.Metadata(installConfig.Config)
 	case nonetypes.Name:
 	case nutanixtypes.Name:
 		metadata.ClusterPlatformMetadata.Nutanix = nutanix.Metadata(installConfig.Config)
+	case openstacktypes.Name:
+		metadata.ClusterPlatformMetadata.OpenStack = openstack.Metadata(clusterID.InfraID, installConfig.Config)
+	case ovirttypes.Name:
+		metadata.ClusterPlatformMetadata.Ovirt = ovirt.Metadata(installConfig.Config)
+	case powervstypes.Name:
+		metadata.ClusterPlatformMetadata.PowerVS = powervs.Metadata(installConfig.Config, installConfig.PowerVS)
+	case vspheretypes.Name:
+		metadata.ClusterPlatformMetadata.VSphere = vsphere.Metadata(installConfig.Config)
 	default:
 		return errors.Errorf("no known platform")
 	}

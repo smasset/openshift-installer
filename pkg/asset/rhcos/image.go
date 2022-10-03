@@ -82,6 +82,12 @@ func osImage(config *types.InstallConfig) (string, error) {
 		return "", err
 	}
 	switch config.Platform.Name() {
+	case alibabacloud.Name:
+		osimage, err := st.GetAliyunImage(archName, config.Platform.AlibabaCloud.Region)
+		if err != nil {
+			return "", err
+		}
+		return osimage, nil
 	case aws.Name:
 		if len(config.Platform.AWS.AMIID) > 0 {
 			return config.Platform.AWS.AMIID, nil
@@ -100,34 +106,6 @@ func osImage(config *types.InstallConfig) (string, error) {
 			osimage = fmt.Sprintf("%s,%s", osimage, region)
 		}
 		return osimage, nil
-	case gcp.Name:
-		if streamArch.Images.Gcp != nil {
-			img := streamArch.Images.Gcp
-			return fmt.Sprintf("projects/%s/global/images/%s", img.Project, img.Name), nil
-		}
-		return "", fmt.Errorf("%s: No GCP build found", st.FormatPrefix(archName))
-	case ibmcloud.Name:
-		if a, ok := streamArch.Artifacts["ibmcloud"]; ok {
-			return rhcos.FindArtifactURL(a)
-		}
-		return "", fmt.Errorf("%s: No ibmcloud build found", st.FormatPrefix(archName))
-	case libvirt.Name:
-		// 𝅘𝅥𝅮 Everything's going to be a-ok 𝅘𝅥𝅮
-		if a, ok := streamArch.Artifacts["qemu"]; ok {
-			return rhcos.FindArtifactURL(a)
-		}
-		return "", fmt.Errorf("%s: No qemu build found", st.FormatPrefix(archName))
-	case ovirt.Name, openstack.Name:
-		op := config.Platform.OpenStack
-		if op != nil {
-			if oi := op.ClusterOSImage; oi != "" {
-				return oi, nil
-			}
-		}
-		if a, ok := streamArch.Artifacts["openstack"]; ok {
-			return rhcos.FindArtifactURL(a)
-		}
-		return "", fmt.Errorf("%s: No openstack build found", st.FormatPrefix(archName))
 	case azure.Name:
 		ext := streamArch.RHELCoreOSExtensions
 		if config.Platform.Azure.CloudName == azure.StackCloud {
@@ -148,22 +126,44 @@ func osImage(config *types.InstallConfig) (string, error) {
 		}
 		// Use image from release payload
 		return "", nil
-	case vsphere.Name:
-		// Check for image URL override
-		if config.Platform.VSphere.ClusterOSImage != "" {
-			return config.Platform.VSphere.ClusterOSImage, nil
+	case gcp.Name:
+		if streamArch.Images.Gcp != nil {
+			img := streamArch.Images.Gcp
+			return fmt.Sprintf("projects/%s/global/images/%s", img.Project, img.Name), nil
 		}
-
-		if a, ok := streamArch.Artifacts["vmware"]; ok {
+		return "", fmt.Errorf("%s: No GCP build found", st.FormatPrefix(archName))
+	case ibmcloud.Name:
+		if a, ok := streamArch.Artifacts["ibmcloud"]; ok {
 			return rhcos.FindArtifactURL(a)
 		}
-		return "", fmt.Errorf("%s: No vmware build found", st.FormatPrefix(archName))
-	case alibabacloud.Name:
-		osimage, err := st.GetAliyunImage(archName, config.Platform.AlibabaCloud.Region)
-		if err != nil {
-			return "", err
+		return "", fmt.Errorf("%s: No ibmcloud build found", st.FormatPrefix(archName))
+	case libvirt.Name:
+		// 𝅘𝅥𝅮 Everything's going to be a-ok 𝅘𝅥𝅮
+		if a, ok := streamArch.Artifacts["qemu"]; ok {
+			return rhcos.FindArtifactURL(a)
 		}
-		return osimage, nil
+		return "", fmt.Errorf("%s: No qemu build found", st.FormatPrefix(archName))
+	case none.Name:
+		return "", nil
+	case nutanix.Name:
+		if config.Platform.Nutanix != nil && config.Platform.Nutanix.ClusterOSImage != "" {
+			return config.Platform.Nutanix.ClusterOSImage, nil
+		}
+		if a, ok := streamArch.Artifacts["nutanix"]; ok {
+			return rhcos.FindArtifactURL(a)
+		}
+		return "", fmt.Errorf("%s: No nutanix build found", st.FormatPrefix(archName))
+	case openstack.Name, ovirt.Name:
+		op := config.Platform.OpenStack
+		if op != nil {
+			if oi := op.ClusterOSImage; oi != "" {
+				return oi, nil
+			}
+		}
+		if a, ok := streamArch.Artifacts["openstack"]; ok {
+			return rhcos.FindArtifactURL(a)
+		}
+		return "", fmt.Errorf("%s: No openstack build found", st.FormatPrefix(archName))
 	case powervs.Name:
 		// Check for image URL override
 		if config.Platform.PowerVS.ClusterOSImage != "" {
@@ -178,16 +178,16 @@ func osImage(config *types.InstallConfig) (string, error) {
 		}
 
 		return "", fmt.Errorf("%s: No Power VS build found", st.FormatPrefix(archName))
-	case none.Name:
-		return "", nil
-	case nutanix.Name:
-		if config.Platform.Nutanix != nil && config.Platform.Nutanix.ClusterOSImage != "" {
-			return config.Platform.Nutanix.ClusterOSImage, nil
+	case vsphere.Name:
+		// Check for image URL override
+		if config.Platform.VSphere.ClusterOSImage != "" {
+			return config.Platform.VSphere.ClusterOSImage, nil
 		}
-		if a, ok := streamArch.Artifacts["nutanix"]; ok {
+
+		if a, ok := streamArch.Artifacts["vmware"]; ok {
 			return rhcos.FindArtifactURL(a)
 		}
-		return "", fmt.Errorf("%s: No nutanix build found", st.FormatPrefix(archName))
+		return "", fmt.Errorf("%s: No vmware build found", st.FormatPrefix(archName))
 	default:
 		return "", fmt.Errorf("invalid platform %v", config.Platform.Name())
 	}

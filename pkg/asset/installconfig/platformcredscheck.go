@@ -50,6 +50,8 @@ func (a *PlatformCredsCheck) Generate(dependencies asset.Parents) error {
 	var err error
 	platform := ic.Config.Platform.Name()
 	switch platform {
+	case baremetal.Name, libvirt.Name, none.Name, nutanix.Name, vsphere.Name:
+		// no creds to check
 	case alibabacloud.Name:
 		_, err = ic.AlibabaCloud.Client()
 		if err != nil {
@@ -60,6 +62,14 @@ func (a *PlatformCredsCheck) Generate(dependencies asset.Parents) error {
 		_, err := ic.AWS.Session(ctx)
 		if err != nil {
 			return err
+		}
+	case azure.Name:
+		azureSession, err := ic.Azure.Session()
+		if err != nil {
+			return errors.Wrap(err, "creating Azure session")
+		}
+		if azureSession.Credentials.ClientCertificatePath != "" && ic.Config.CredentialsMode != "manual" {
+			return fmt.Errorf("authentication with client certificates is only supported in manual credentials mode")
 		}
 	case gcp.Name:
 		client, err := gcpconfig.NewClient(context.TODO())
@@ -76,29 +86,10 @@ func (a *PlatformCredsCheck) Generate(dependencies asset.Parents) error {
 		if err != nil {
 			return errors.Wrap(err, "creating IBM Cloud session")
 		}
-	case powervs.Name:
-		bxCli, err := powervsconfig.NewBxClient()
-		if err != nil {
-			return err
-		}
-		err = bxCli.NewPISession()
-		if err != nil {
-			return errors.Wrap(err, "creating IBM Cloud session")
-		}
 	case openstack.Name:
 		_, err = openstackconfig.GetSession(ic.Config.Platform.OpenStack.Cloud)
 		if err != nil {
 			return errors.Wrap(err, "creating OpenStack session")
-		}
-	case baremetal.Name, libvirt.Name, none.Name, vsphere.Name, nutanix.Name:
-		// no creds to check
-	case azure.Name:
-		azureSession, err := ic.Azure.Session()
-		if err != nil {
-			return errors.Wrap(err, "creating Azure session")
-		}
-		if azureSession.Credentials.ClientCertificatePath != "" && ic.Config.CredentialsMode != "manual" {
-			return fmt.Errorf("authentication with client certificates is only supported in manual credentials mode")
 		}
 	case ovirt.Name:
 		con, err := ovirtconfig.NewConnection()
@@ -108,6 +99,15 @@ func (a *PlatformCredsCheck) Generate(dependencies asset.Parents) error {
 		err = con.Test()
 		if err != nil {
 			return errors.Wrap(err, "testing Engine connection")
+		}
+	case powervs.Name:
+		bxCli, err := powervsconfig.NewBxClient()
+		if err != nil {
+			return err
+		}
+		err = bxCli.NewPISession()
+		if err != nil {
+			return errors.Wrap(err, "creating IBM Cloud session")
 		}
 	default:
 		err = fmt.Errorf("unknown platform type %q", platform)

@@ -93,8 +93,19 @@ func (cpc *CloudProviderConfig) Generate(dependencies asset.Parents) error {
 	}
 
 	switch installConfig.Config.Platform.Name() {
-	case libvirttypes.Name, nonetypes.Name, baremetaltypes.Name, ovirttypes.Name, nutanixtypes.Name:
+	case baremetaltypes.Name, libvirttypes.Name, nonetypes.Name, nutanixtypes.Name, ovirttypes.Name:
 		return nil
+	case alibabacloudtypes.Name:
+		alibabacloudConfig, err := alibabacloudmanifests.CloudConfig{
+			Global: alibabacloudmanifests.GlobalConfig{
+				ClusterID: clusterID.InfraID,
+				Region:    installConfig.Config.AlibabaCloud.Region,
+			},
+		}.JSON()
+		if err != nil {
+			return errors.Wrap(err, "could not create Alibaba Cloud provider config")
+		}
+		cm.Data[cloudProviderConfigDataKey] = alibabacloudConfig
 	case awstypes.Name:
 		// Store the additional trust bundle in the ca-bundle.pem key if the cluster is being installed on a C2S region.
 		trustBundle := installConfig.Config.AdditionalTrustBundle
@@ -108,27 +119,6 @@ func (cpc *CloudProviderConfig) Generate(dependencies asset.Parents) error {
 		// Note that the newline is required in order to be valid yaml.
 		cm.Data[cloudProviderConfigDataKey] = `[Global]
 `
-	case alibabacloudtypes.Name:
-		alibabacloudConfig, err := alibabacloudmanifests.CloudConfig{
-			Global: alibabacloudmanifests.GlobalConfig{
-				ClusterID: clusterID.InfraID,
-				Region:    installConfig.Config.AlibabaCloud.Region,
-			},
-		}.JSON()
-		if err != nil {
-			return errors.Wrap(err, "could not create Alibaba Cloud provider config")
-		}
-		cm.Data[cloudProviderConfigDataKey] = alibabacloudConfig
-	case openstacktypes.Name:
-		cloudProviderConfigData, cloudProviderConfigCABundleData, err := openstackmanifests.GenerateCloudProviderConfig(*installConfig.Config)
-		if err != nil {
-			return errors.Wrap(err, "failed to generate OpenStack provider config")
-		}
-		cm.Data[cloudProviderConfigDataKey] = cloudProviderConfigData
-		if cloudProviderConfigCABundleData != "" {
-			cm.Data[cloudProviderConfigCABundleDataKey] = cloudProviderConfigCABundleData
-		}
-
 	case azuretypes.Name:
 		session, err := installConfig.Azure.Session()
 		if err != nil {
@@ -241,6 +231,16 @@ func (cpc *CloudProviderConfig) Generate(dependencies asset.Parents) error {
 			return errors.Wrap(err, "could not create cloud provider config")
 		}
 		cm.Data[cloudProviderConfigDataKey] = ibmcloudConfig
+	case openstacktypes.Name:
+		cloudProviderConfigData, cloudProviderConfigCABundleData, err := openstackmanifests.GenerateCloudProviderConfig(*installConfig.Config)
+		if err != nil {
+			return errors.Wrap(err, "failed to generate OpenStack provider config")
+		}
+		cm.Data[cloudProviderConfigDataKey] = cloudProviderConfigData
+		if cloudProviderConfigCABundleData != "" {
+			cm.Data[cloudProviderConfigCABundleDataKey] = cloudProviderConfigCABundleData
+		}
+
 	case powervstypes.Name:
 		var (
 			accountID, vpcRegion string

@@ -211,7 +211,7 @@ func (d *DNS) Generate(dependencies asset.Parents) error {
 		config.Spec.PrivateZone = &configv1.DNSZone{
 			ID: zoneID,
 		}
-	case libvirttypes.Name, openstacktypes.Name, baremetaltypes.Name, nonetypes.Name, vspheretypes.Name, ovirttypes.Name, nutanixtypes.Name:
+	case baremetaltypes.Name, libvirttypes.Name, nonetypes.Name, nutanixtypes.Name, openstacktypes.Name, ovirttypes.Name, vspheretypes.Name:
 	default:
 		return errors.New("invalid Platform")
 	}

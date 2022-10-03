@@ -495,6 +495,21 @@ func (w *Worker) Generate(dependencies asset.Parents) error {
 			for _, set := range sets {
 				machineSets = append(machineSets, set)
 			}
+		case nonetypes.Name:
+		case nutanixtypes.Name:
+			mpool := defaultNutanixMachinePoolPlatform()
+			mpool.Set(ic.Platform.Nutanix.DefaultMachinePlatform)
+			mpool.Set(pool.Platform.Nutanix)
+			pool.Platform.Nutanix = &mpool
+			imageName := nutanixtypes.RHCOSImageName(clusterID.InfraID)
+
+			sets, err := nutanix.MachineSets(clusterID.InfraID, ic, &pool, imageName, "worker", workerUserDataSecretName)
+			if err != nil {
+				return errors.Wrap(err, "failed to create worker machine objects")
+			}
+			for _, set := range sets {
+				machineSets = append(machineSets, set)
+			}
 		case openstacktypes.Name:
 			mpool := defaultOpenStackMachinePoolPlatform()
 			mpool.Set(ic.Platform.OpenStack.DefaultMachinePlatform)
@@ -504,28 +519,6 @@ func (w *Worker) Generate(dependencies asset.Parents) error {
 			imageName, _ := rhcosutils.GenerateOpenStackImageName(string(*rhcosImage), clusterID.InfraID)
 
 			sets, err := openstack.MachineSets(clusterID.InfraID, ic, &pool, imageName, "worker", workerUserDataSecretName, nil)
-			if err != nil {
-				return errors.Wrap(err, "failed to create worker machine objects")
-			}
-			for _, set := range sets {
-				machineSets = append(machineSets, set)
-			}
-		case vspheretypes.Name:
-			mpool := defaultVSphereMachinePoolPlatform()
-			mpool.Set(ic.Platform.VSphere.DefaultMachinePlatform)
-			mpool.Set(pool.Platform.VSphere)
-			// The machinepool has no zones defined, there are FailureDomains
-			// This is a vSphere zonal installation. Generate machinepool zone
-			// list.
-			if len(mpool.Zones) == 0 && len(ic.VSphere.FailureDomains) != 0 {
-				for _, fd := range ic.VSphere.FailureDomains {
-					mpool.Zones = append(mpool.Zones, fd.Name)
-				}
-			}
-			pool.Platform.VSphere = &mpool
-			templateName := clusterID.InfraID + "-rhcos"
-
-			sets, err := vsphere.MachineSets(clusterID.InfraID, ic, &pool, templateName, "worker", workerUserDataSecretName)
 			if err != nil {
 				return errors.Wrap(err, "failed to create worker machine objects")
 			}
@@ -559,15 +552,22 @@ func (w *Worker) Generate(dependencies asset.Parents) error {
 			for _, set := range sets {
 				machineSets = append(machineSets, set)
 			}
-		case nonetypes.Name:
-		case nutanixtypes.Name:
-			mpool := defaultNutanixMachinePoolPlatform()
-			mpool.Set(ic.Platform.Nutanix.DefaultMachinePlatform)
-			mpool.Set(pool.Platform.Nutanix)
-			pool.Platform.Nutanix = &mpool
-			imageName := nutanixtypes.RHCOSImageName(clusterID.InfraID)
+		case vspheretypes.Name:
+			mpool := defaultVSphereMachinePoolPlatform()
+			mpool.Set(ic.Platform.VSphere.DefaultMachinePlatform)
+			mpool.Set(pool.Platform.VSphere)
+			// The machinepool has no zones defined, there are FailureDomains
+			// This is a vSphere zonal installation. Generate machinepool zone
+			// list.
+			if len(mpool.Zones) == 0 && len(ic.VSphere.FailureDomains) != 0 {
+				for _, fd := range ic.VSphere.FailureDomains {
+					mpool.Zones = append(mpool.Zones, fd.Name)
+				}
+			}
+			pool.Platform.VSphere = &mpool
+			templateName := clusterID.InfraID + "-rhcos"
 
-			sets, err := nutanix.MachineSets(clusterID.InfraID, ic, &pool, imageName, "worker", workerUserDataSecretName)
+			sets, err := vsphere.MachineSets(clusterID.InfraID, ic, &pool, templateName, "worker", workerUserDataSecretName)
 			if err != nil {
 				return errors.Wrap(err, "failed to create worker machine objects")
 			}

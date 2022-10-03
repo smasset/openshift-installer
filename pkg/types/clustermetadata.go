@@ -31,16 +31,16 @@ type ClusterMetadata struct {
 type ClusterPlatformMetadata struct {
 	AlibabaCloud *alibabacloud.Metadata `json:"alibabacloud,omitempty"`
 	AWS          *aws.Metadata          `json:"aws,omitempty"`
-	OpenStack    *openstack.Metadata    `json:"openstack,omitempty"`
-	Libvirt      *libvirt.Metadata      `json:"libvirt,omitempty"`
 	Azure        *azure.Metadata        `json:"azure,omitempty"`
+	BareMetal    *baremetal.Metadata    `json:"baremetal,omitempty"`
 	GCP          *gcp.Metadata          `json:"gcp,omitempty"`
 	IBMCloud     *ibmcloud.Metadata     `json:"ibmcloud,omitempty"`
-	BareMetal    *baremetal.Metadata    `json:"baremetal,omitempty"`
+	Libvirt      *libvirt.Metadata      `json:"libvirt,omitempty"`
+	Nutanix      *nutanix.Metadata      `json:"nutanix,omitempty"`
+	OpenStack    *openstack.Metadata    `json:"openstack,omitempty"`
 	Ovirt        *ovirt.Metadata        `json:"ovirt,omitempty"`
 	PowerVS      *powervs.Metadata      `json:"powervs,omitempty"`
 	VSphere      *vsphere.Metadata      `json:"vsphere,omitempty"`
-	Nutanix      *nutanix.Metadata      `json:"nutanix,omitempty"`
 }
 
 // Platform returns a string representation of the platform
@@ -56,14 +56,11 @@ func (cpm *ClusterPlatformMetadata) Platform() string {
 	if cpm.AWS != nil {
 		return aws.Name
 	}
-	if cpm.Libvirt != nil {
-		return libvirt.Name
-	}
-	if cpm.OpenStack != nil {
-		return openstack.Name
-	}
 	if cpm.Azure != nil {
 		return azure.Name
+	}
+	if cpm.BareMetal != nil {
+		return "baremetal"
 	}
 	if cpm.GCP != nil {
 		return gcp.Name
@@ -71,8 +68,14 @@ func (cpm *ClusterPlatformMetadata) Platform() string {
 	if cpm.IBMCloud != nil {
 		return ibmcloud.Name
 	}
-	if cpm.BareMetal != nil {
-		return "baremetal"
+	if cpm.Libvirt != nil {
+		return libvirt.Name
+	}
+	if cpm.Nutanix != nil {
+		return nutanix.Name
+	}
+	if cpm.OpenStack != nil {
+		return openstack.Name
 	}
 	if cpm.Ovirt != nil {
 		return ovirt.Name
@@ -82,9 +85,6 @@ func (cpm *ClusterPlatformMetadata) Platform() string {
 	}
 	if cpm.VSphere != nil {
 		return vsphere.Name
-	}
-	if cpm.Nutanix != nil {
-		return nutanix.Name
 	}
 	return ""
 }

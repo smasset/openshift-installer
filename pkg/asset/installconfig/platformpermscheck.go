@@ -100,7 +100,7 @@ func (a *PlatformPermsCheck) Generate(dependencies asset.Parents) error {
 		if err != nil {
 			return err
 		}
-	case azure.Name, baremetal.Name, libvirt.Name, none.Name, openstack.Name, ovirt.Name, vsphere.Name, alibabacloud.Name, nutanix.Name:
+	case alibabacloud.Name, azure.Name, baremetal.Name, libvirt.Name, none.Name, nutanix.Name, openstack.Name, ovirt.Name, vsphere.Name:
 		// no permissions to check
 	default:
 		err = fmt.Errorf("unknown platform type %q", platform)

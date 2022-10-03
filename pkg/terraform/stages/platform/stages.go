@@ -50,21 +50,21 @@ func StagesForPlatform(platform string) []terraform.Stage {
 		return ibmcloud.PlatformStages
 	case libvirttypes.Name:
 		return libvirt.PlatformStages
+	case nonetypes.Name:
+		// terraform is not used when the platform is "none"
+		return []terraform.Stage{}
 	case nutanixtypes.Name:
 		return nutanix.PlatformStages
-	case powervstypes.Name:
-		return powervs.PlatformStages
 	case openstacktypes.Name:
 		return openstack.PlatformStages
 	case ovirttypes.Name:
 		return ovirt.PlatformStages
+	case powervstypes.Name:
+		return powervs.PlatformStages
 	case vspheretypes.Name:
 		return vsphere.PlatformStages
 	case vspheretypes.ZoningTerraformName:
 		return vsphere.ZoningPlatformStages
-	case nonetypes.Name:
-		// terraform is not used when the platform is "none"
-		return []terraform.Stage{}
 	default:
 		panic(fmt.Sprintf("unsupported platform %q", platform))
 	}

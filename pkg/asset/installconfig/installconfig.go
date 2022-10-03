@@ -92,17 +92,17 @@ func (a *InstallConfig) Generate(parents asset.Parents) error {
 
 	a.Config.AlibabaCloud = platform.AlibabaCloud
 	a.Config.AWS = platform.AWS
-	a.Config.Libvirt = platform.Libvirt
-	a.Config.None = platform.None
-	a.Config.OpenStack = platform.OpenStack
-	a.Config.VSphere = platform.VSphere
 	a.Config.Azure = platform.Azure
+	a.Config.BareMetal = platform.BareMetal
 	a.Config.GCP = platform.GCP
 	a.Config.IBMCloud = platform.IBMCloud
-	a.Config.BareMetal = platform.BareMetal
+	a.Config.Libvirt = platform.Libvirt
+	a.Config.None = platform.None
+	a.Config.Nutanix = platform.Nutanix
+	a.Config.OpenStack = platform.OpenStack
 	a.Config.Ovirt = platform.Ovirt
 	a.Config.PowerVS = platform.PowerVS
-	a.Config.Nutanix = platform.Nutanix
+	a.Config.VSphere = platform.VSphere
 
 	return a.finish("")
 }
@@ -161,11 +161,11 @@ func (a *InstallConfig) Load(f asset.FileFetcher) (found bool, err error) {
 func (a *InstallConfig) finish(filename string) error {
 	defaults.SetInstallConfigDefaults(a.Config)
 
-	if a.Config.AWS != nil {
-		a.AWS = aws.NewMetadata(a.Config.Platform.AWS.Region, a.Config.Platform.AWS.Subnets, a.Config.AWS.ServiceEndpoints)
-	}
 	if a.Config.AlibabaCloud != nil {
 		a.AlibabaCloud = alibabacloud.NewMetadata(a.Config.AlibabaCloud.Region, a.Config.AlibabaCloud.VSwitchIDs)
+	}
+	if a.Config.AWS != nil {
+		a.AWS = aws.NewMetadata(a.Config.Platform.AWS.Region, a.Config.Platform.AWS.Subnets, a.Config.AWS.ServiceEndpoints)
 	}
 	if a.Config.Azure != nil {
 		a.Azure = icazure.NewMetadata(a.Config.Azure.CloudName, a.Config.Azure.ARMEndpoint)
@@ -207,6 +207,9 @@ func (a *InstallConfig) platformValidation() error {
 		}
 		return alibabacloud.Validate(client, a.Config)
 	}
+	if a.Config.Platform.AWS != nil {
+		return aws.Validate(context.TODO(), a.AWS, a.Config)
+	}
 	if a.Config.Platform.Azure != nil {
 		client, err := a.Azure.Client()
 		if err != nil {
@@ -228,23 +231,20 @@ func (a *InstallConfig) platformValidation() error {
 		}
 		return icibmcloud.Validate(client, a.Config)
 	}
-	if a.Config.Platform.AWS != nil {
-		return aws.Validate(context.TODO(), a.AWS, a.Config)
-	}
-	if a.Config.Platform.VSphere != nil {
-		return icvsphere.Validate(a.Config)
-	}
-	if a.Config.Platform.Ovirt != nil {
-		return icovirt.Validate(a.Config)
+	if a.Config.Platform.Nutanix != nil {
+		return icnutanix.Validate(a.Config)
 	}
 	if a.Config.Platform.OpenStack != nil {
 		return icopenstack.Validate(a.Config)
 	}
+	if a.Config.Platform.Ovirt != nil {
+		return icovirt.Validate(a.Config)
+	}
 	if a.Config.Platform.PowerVS != nil {
 		return icpowervs.Validate(a.Config)
 	}
-	if a.Config.Platform.Nutanix != nil {
-		return icnutanix.Validate(a.Config)
+	if a.Config.Platform.VSphere != nil {
+		return icvsphere.Validate(a.Config)
 	}
 	return field.ErrorList{}.ToAggregate()
 }

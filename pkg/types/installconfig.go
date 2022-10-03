@@ -241,9 +241,17 @@ type Platform struct {
 	// platform.
 	None *none.Platform `json:"none,omitempty"`
 
+	// Nutanix is the configuration used when installing on Nutanix.
+	// +optional
+	Nutanix *nutanix.Platform `json:"nutanix,omitempty"`
+
 	// OpenStack is the configuration used when installing on OpenStack.
 	// +optional
 	OpenStack *openstack.Platform `json:"openstack,omitempty"`
+
+	// Ovirt is the configuration used when installing on oVirt.
+	// +optional
+	Ovirt *ovirt.Platform `json:"ovirt,omitempty"`
 
 	// PowerVS is the configuration used when installing on Power VS.
 	// +optional
@@ -252,14 +260,6 @@ type Platform struct {
 	// VSphere is the configuration used when installing on vSphere.
 	// +optional
 	VSphere *vsphere.Platform `json:"vsphere,omitempty"`
-
-	// Ovirt is the configuration used when installing on oVirt.
-	// +optional
-	Ovirt *ovirt.Platform `json:"ovirt,omitempty"`
-
-	// Nutanix is the configuration used when installing on Nutanix.
-	// +optional
-	Nutanix *nutanix.Platform `json:"nutanix,omitempty"`
 }
 
 // Name returns a string representation of the platform (e.g. "aws" if
@@ -285,16 +285,17 @@ func (p *Platform) Name() string {
 		return libvirt.Name
 	case p.None != nil:
 		return none.Name
+
+	case p.Nutanix != nil:
+		return nutanix.Name
 	case p.OpenStack != nil:
 		return openstack.Name
-	case p.VSphere != nil:
-		return vsphere.Name
 	case p.Ovirt != nil:
 		return ovirt.Name
 	case p.PowerVS != nil:
 		return powervs.Name
-	case p.Nutanix != nil:
-		return nutanix.Name
+	case p.VSphere != nil:
+		return vsphere.Name
 	default:
 		return ""
 	}
