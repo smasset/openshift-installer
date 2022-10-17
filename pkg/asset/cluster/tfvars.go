@@ -486,11 +486,18 @@ func (t *TerraformVariables) Generate(parents asset.Parents) error {
 	case flexibleengine.Name:
 		data, err := flexiblenginetfvars.TFVars(
 			flexiblenginetfvars.TFVarsSources{
-				AccessKey:   installConfig.Config.FE.AccessKey,
-				SecretKey:   installConfig.Config.FE.SecretKey,
-				DomainName:  installConfig.Config.FE.DomainName,
-				Region:      installConfig.Config.FE.Region,
-				ProjectName: installConfig.Config.FE.ProjectName,
+				AccessKey:       installConfig.Config.FE.AccessKey,
+				SecretKey:       installConfig.Config.FE.SecretKey,
+				DomainName:      installConfig.Config.FE.DomainName,
+				Region:          installConfig.Config.FE.Region,
+				ProjectName:     installConfig.Config.FE.ProjectName,
+				VPC:             installConfig.Config.FE.VPC,
+				VPCName:         installConfig.Config.FE.VPCName,
+				VPCCIDR:         installConfig.Config.FE.VPCCIDR,
+				Subnet:          installConfig.Config.FE.Subnet,
+				SubnetName:      installConfig.Config.FE.SubnetName,
+				SubnetCIDR:      installConfig.Config.FE.SubnetCIDR,
+				SubnetGatewayIP: installConfig.Config.FE.SubnetGatewayIP,
 			},
 		)
 		if err != nil {
