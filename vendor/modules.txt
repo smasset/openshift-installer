@@ -293,6 +293,21 @@ github.com/cavaliercoder/go-cpio
 # github.com/cespare/xxhash/v2 v2.1.2
 ## explicit; go 1.11
 github.com/cespare/xxhash/v2
+# github.com/chnsz/golangsdk v0.0.0-20221014072812-3b89f7691e5b
+## explicit; go 1.14
+github.com/chnsz/golangsdk
+github.com/chnsz/golangsdk/openstack
+github.com/chnsz/golangsdk/openstack/common/tags
+github.com/chnsz/golangsdk/openstack/identity/v2/tenants
+github.com/chnsz/golangsdk/openstack/identity/v2/tokens
+github.com/chnsz/golangsdk/openstack/identity/v3/catalog
+github.com/chnsz/golangsdk/openstack/identity/v3/domains
+github.com/chnsz/golangsdk/openstack/identity/v3/projects
+github.com/chnsz/golangsdk/openstack/identity/v3/tokens
+github.com/chnsz/golangsdk/openstack/networking/v1/vpcs
+github.com/chnsz/golangsdk/openstack/networking/v2/subnets
+github.com/chnsz/golangsdk/openstack/utils
+github.com/chnsz/golangsdk/pagination
 # github.com/clarketm/json v1.14.1
 ## explicit
 github.com/clarketm/json
